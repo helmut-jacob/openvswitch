@@ -54,13 +54,6 @@ sset_add__(struct sset *set, const char *name, size_t length, size_t hash)
     return node;
 }
 
-/* Initializes 'set' as an empty set of strings. */
-void
-sset_init(struct sset *set)
-{
-    hmap_init(&set->map);
-}
-
 /* Destroys 'sets'. */
 void
 sset_destroy(struct sset *set)
@@ -82,36 +75,6 @@ sset_clone(struct sset *set, const struct sset *orig)
         sset_add__(set, node->name, strlen(node->name),
                    node->hmap_node.hash);
     }
-}
-
-/* Exchanges the contents of 'a' and 'b'. */
-void
-sset_swap(struct sset *a, struct sset *b)
-{
-    hmap_swap(&a->map, &b->map);
-}
-
-/* Adjusts 'set' so that it is still valid after it has been moved around in
- * memory (e.g. due to realloc()). */
-void
-sset_moved(struct sset *set)
-{
-    hmap_moved(&set->map);
-}
-
-/* Returns true if 'set' contains no strings, false if it contains at least one
- * string. */
-bool
-sset_is_empty(const struct sset *set)
-{
-    return hmap_is_empty(&set->map);
-}
-
-/* Returns the number of strings in 'set'. */
-size_t
-sset_count(const struct sset *set)
-{
-    return hmap_count(&set->map);
 }
 
 /* Adds 'name' to 'set'.  If 'name' is new, returns the new sset_node;
@@ -222,13 +185,6 @@ struct sset_node *
 sset_find(const struct sset *set, const char *name)
 {
     return sset_find__(set, name, hash_name(name));
-}
-
-/* Returns true if 'set' contains a copy of 'name', false otherwise. */
-bool
-sset_contains(const struct sset *set, const char *name)
-{
-    return sset_find(set, name) != NULL;
 }
 
 /* Returns true if 'a' and 'b' contain the same strings, false otherwise. */

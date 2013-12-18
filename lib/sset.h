@@ -37,15 +37,53 @@ struct sset {
 #define SSET_INITIALIZER(SSET) { HMAP_INITIALIZER(&(SSET)->map) }
 
 /* Basics. */
-void sset_init(struct sset *);
+static inline void sset_init(struct sset *);
 void sset_destroy(struct sset *);
 void sset_clone(struct sset *, const struct sset *);
-void sset_swap(struct sset *, struct sset *);
-void sset_moved(struct sset *);
+static inline void sset_swap(struct sset *, struct sset *);
+static inline void sset_moved(struct sset *);
+
+/* Initializes 'set' as an empty set of strings. */
+static inline void
+sset_init(struct sset *set)
+{
+    hmap_init(&set->map);
+}
+
+/* Exchanges the contents of 'a' and 'b'. */
+static inline void
+sset_swap(struct sset *a, struct sset *b)
+{
+    hmap_swap(&a->map, &b->map);
+}
+
+/* Adjusts 'set' so that it is still valid after it has been moved around in
+ * memory (e.g. due to realloc()). */
+static inline void
+sset_moved(struct sset *set)
+{
+    hmap_moved(&set->map);
+}
 
 /* Count. */
-bool sset_is_empty(const struct sset *);
-size_t sset_count(const struct sset *);
+static inline bool sset_is_empty(const struct sset *);
+static inline size_t sset_count(const struct sset *);
+
+
+/* Returns true if 'set' contains no strings, false if it contains at least one
+ * string. */
+static inline bool
+sset_is_empty(const struct sset *set)
+{
+    return hmap_is_empty(&set->map);
+}
+
+/* Returns the number of strings in 'set'. */
+static inline size_t
+sset_count(const struct sset *set)
+{
+    return hmap_count(&set->map);
+}
 
 /* Insertion. */
 struct sset_node *sset_add(struct sset *, const char *);
@@ -62,7 +100,14 @@ char *sset_pop(struct sset *);
 
 /* Search. */
 struct sset_node *sset_find(const struct sset *, const char *);
-bool sset_contains(const struct sset *, const char *);
+
+/* Returns true if 'set' contains a copy of 'name', false otherwise. */
+static inline bool
+sset_contains(const struct sset *set, const char *name)
+{
+    return sset_find(set, name) != NULL;
+}
+
 bool sset_equals(const struct sset *, const struct sset *);
 struct sset_node *sset_at_position(const struct sset *,
                                    uint32_t *bucketp, uint32_t *offsetp);

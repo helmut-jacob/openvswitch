@@ -187,7 +187,11 @@ void vlog_rate_limit(const struct vlog_module *, enum vlog_level,
 #define VLOG_ERR(...) VLOG(VLL_ERR, __VA_ARGS__)
 #define VLOG_WARN(...) VLOG(VLL_WARN, __VA_ARGS__)
 #define VLOG_INFO(...) VLOG(VLL_INFO, __VA_ARGS__)
+#ifndef NDEBUG
 #define VLOG_DBG(...) VLOG(VLL_DBG, __VA_ARGS__)
+#else
+#define VLOG_DBG(...)
+#endif
 
 /* More convenience macros, for testing whether a given level is enabled in
  * THIS_MODULE.  When constructing a log message is expensive, this enables it

@@ -27,13 +27,6 @@ static struct simap_node *simap_add_nocopy__(struct simap *,
                                              size_t hash);
 static int compare_nodes_by_name(const void *a_, const void *b_);
 
-/* Initializes 'simap' as an empty string-to-integer map. */
-void
-simap_init(struct simap *simap)
-{
-    hmap_init(&simap->map);
-}
-
 /* Frees all the data that 'simap' contains. */
 void
 simap_destroy(struct simap *simap)
@@ -42,21 +35,6 @@ simap_destroy(struct simap *simap)
         simap_clear(simap);
         hmap_destroy(&simap->map);
     }
-}
-
-/* Exchanges the contents of 'a' and 'b'. */
-void
-simap_swap(struct simap *a, struct simap *b)
-{
-    hmap_swap(&a->map, &b->map);
-}
-
-/* Adjusts 'simap' so that it is still valid after it has been moved around in
- * memory (e.g. due to realloc()). */
-void
-simap_moved(struct simap *simap)
-{
-    hmap_moved(&simap->map);
 }
 
 /* Removes all of the mappings from 'simap' and frees them. */
@@ -70,21 +48,6 @@ simap_clear(struct simap *simap)
         free(node->name);
         free(node);
     }
-}
-
-/* Returns true if 'simap' contains no mappings, false if it contains at least
- * one. */
-bool
-simap_is_empty(const struct simap *simap)
-{
-    return hmap_is_empty(&simap->map);
-}
-
-/* Returns the number of mappings in 'simap'. */
-size_t
-simap_count(const struct simap *simap)
-{
-    return hmap_count(&simap->map);
 }
 
 /* Inserts a mapping from 'name' to 'data' into 'simap', replacing any
@@ -183,13 +146,6 @@ simap_get(const struct simap *simap, const char *name)
 {
     struct simap_node *node = simap_find(simap, name);
     return node ? node->data : 0;
-}
-
-/* Returns true if 'simap' contains a copy of 'name', false otherwise. */
-bool
-simap_contains(const struct simap *simap, const char *name)
-{
-    return simap_find(simap, name) != NULL;
 }
 
 /* Returns an array that contains a pointer to each mapping in 'simap',

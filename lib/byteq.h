@@ -29,10 +29,38 @@ struct byteq {
 };
 
 void byteq_init(struct byteq *, uint8_t *buffer, size_t size);
-int byteq_used(const struct byteq *);
-int byteq_avail(const struct byteq *);
-bool byteq_is_empty(const struct byteq *);
-bool byteq_is_full(const struct byteq *);
+
+/* Returns the number of bytes current queued in 'q'. */
+static inline int
+byteq_used(const struct byteq *q)
+{
+    return q->head - q->tail;
+}
+
+/* Returns the number of bytes that can be added to 'q' without overflow. */
+static inline int
+byteq_avail(const struct byteq *q)
+{
+    return q->size - byteq_used(q);
+}
+
+/* Returns true if no bytes are queued in 'q',
+ * false if at least one byte is queued.  */
+static inline bool
+byteq_is_empty(const struct byteq *q)
+{
+    return !byteq_used(q);
+}
+
+/* Returns true if 'q' has no room to queue additional bytes,
+ * false if 'q' has room for at least one more byte.  */
+static inline bool
+byteq_is_full(const struct byteq *q)
+{
+    return !byteq_avail(q);
+}
+
+
 void byteq_put(struct byteq *, uint8_t c);
 void byteq_putn(struct byteq *, const void *, size_t n);
 void byteq_put_string(struct byteq *, const char *);

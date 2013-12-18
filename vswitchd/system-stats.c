@@ -52,6 +52,7 @@ VLOG_DEFINE_THIS_MODULE(system_stats);
  * __linux__" where this is possible. */
 #ifdef LINUX_DATAPATH
 #include <asm/param.h>
+#include <sys/sysinfo.h>
 #else
 #define LINUX_DATAPATH 0
 #endif
@@ -93,77 +94,61 @@ get_page_size(void)
     return cached;
 }
 
+#ifdef LINUX_DATAPATH
+static void
+get_memory_stats_linux(struct smap *stats)
+{
+	struct sysinfo info;
+        int mem_used, mem_cache, swap_used, mem_total, swap_total;
+
+        if (sysinfo(&info))
+            return;
+
+        mem_total = info.totalram * (info.mem_unit / 1024);
+        mem_used = (info.totalram - info.freeram) * (info.mem_unit / 1024);
+        mem_cache = info.bufferram * (info.mem_unit / 1024);
+        swap_total =  info.totalswap * (info.mem_unit / 1024);
+        swap_used = (info.totalswap - info.freeswap) * (info.mem_unit / 1024);
+
+        smap_add_format(stats, "memory", "%d,%d,%d,%d,%d",
+                        mem_total, mem_used, mem_cache, swap_total, swap_used);
+}
+#else
+static void
+get_memory_stats_unix(struct smap *stats)
+{
+    unsigned int pagesize = get_page_size();
+#ifdef _SC_PHYS_PAGES
+    long int phys_pages = sysconf(_SC_PHYS_PAGES);
+#else
+    long int phys_pages = 0;
+#endif
+#ifdef _SC_AVPHYS_PAGES
+    long int avphys_pages = sysconf(_SC_AVPHYS_PAGES);
+#else
+    long int avphys_pages = 0;
+#endif
+    int mem_total, mem_used;
+
+    if (pagesize <= 0 || phys_pages <= 0 || avphys_pages <= 0) {
+        return;
+    }
+
+    mem_total = phys_pages * (pagesize / 1024);
+    mem_used = (phys_pages - avphys_pages) * (pagesize / 1024);
+    smap_add_format(stats, "memory", "%d,%d", mem_total, mem_used);
+}
+#endif /*LINUX_DATAPATH*/
+
 static void
 get_memory_stats(struct smap *stats)
 {
-    if (!LINUX_DATAPATH) {
-        unsigned int pagesize = get_page_size();
-#ifdef _SC_PHYS_PAGES
-        long int phys_pages = sysconf(_SC_PHYS_PAGES);
+#ifdef LINUX_DATAPATH
+    get_memory_stats_linux(stats);
 #else
-        long int phys_pages = 0;
+    get_memory_stats_unix(stats);
 #endif
-#ifdef _SC_AVPHYS_PAGES
-        long int avphys_pages = sysconf(_SC_AVPHYS_PAGES);
-#else
-        long int avphys_pages = 0;
-#endif
-        int mem_total, mem_used;
 
-        if (pagesize <= 0 || phys_pages <= 0 || avphys_pages <= 0) {
-            return;
-        }
-
-        mem_total = phys_pages * (pagesize / 1024);
-        mem_used = (phys_pages - avphys_pages) * (pagesize / 1024);
-        smap_add_format(stats, "memory", "%d,%d", mem_total, mem_used);
-    } else {
-        static const char file_name[] = "/proc/meminfo";
-        int mem_used, mem_cache, swap_used;
-        int mem_free = 0;
-        int buffers = 0;
-        int cached = 0;
-        int swap_free = 0;
-        int mem_total = 0;
-        int swap_total = 0;
-        struct shash dict;
-        char line[128];
-        FILE *stream;
-
-        stream = fopen(file_name, "r");
-        if (!stream) {
-            VLOG_WARN_ONCE("%s: open failed (%s)",
-                           file_name, ovs_strerror(errno));
-            return;
-        }
-
-        shash_init(&dict);
-        shash_add(&dict, "MemTotal", &mem_total);
-        shash_add(&dict, "MemFree", &mem_free);
-        shash_add(&dict, "Buffers", &buffers);
-        shash_add(&dict, "Cached", &cached);
-        shash_add(&dict, "SwapTotal", &swap_total);
-        shash_add(&dict, "SwapFree", &swap_free);
-        while (fgets(line, sizeof line, stream)) {
-            char key[16];
-            int value;
-
-            if (ovs_scan(line, "%15[^:]: %u", key, &value)) {
-                int *valuep = shash_find_data(&dict, key);
-                if (valuep) {
-                    *valuep = value;
-                }
-            }
-        }
-        fclose(stream);
-        shash_destroy(&dict);
-
-        mem_used = mem_total - mem_free;
-        mem_cache = buffers + cached;
-        swap_used = swap_total - swap_free;
-        smap_add_format(stats, "memory", "%d,%d,%d,%d,%d",
-                        mem_total, mem_used, mem_cache, swap_total, swap_used);
-    }
 }
 
 /* Returns the time at which the system booted, as the number of milliseconds

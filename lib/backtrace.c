@@ -31,10 +31,4 @@ backtrace_capture(struct backtrace *b)
         b->frames[i] = (uintptr_t) frames[i];
     }
 }
-#else
-void
-backtrace_capture(struct backtrace *backtrace)
-{
-    backtrace->n_frames = 0;
-}
 #endif

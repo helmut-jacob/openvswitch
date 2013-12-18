@@ -38,7 +38,11 @@ struct smap_node {
 #define SMAP_FOR_EACH_SAFE(SMAP_NODE, NEXT, SMAP) \
     HMAP_FOR_EACH_SAFE (SMAP_NODE, NEXT, node, &(SMAP)->map)
 
-void smap_init(struct smap *);
+static inline void
+smap_init(struct smap *smap)
+{
+    hmap_init(&smap->map);
+}
 void smap_destroy(struct smap *);
 
 struct smap_node *smap_add(struct smap *, const char *, const char *);
@@ -57,8 +61,19 @@ struct smap_node *smap_get_node(const struct smap *, const char *);
 bool smap_get_bool(const struct smap *smap, const char *key, bool def);
 int smap_get_int(const struct smap *smap, const char *key, int def);
 
-bool smap_is_empty(const struct smap *);
-size_t smap_count(const struct smap *);
+/* Returns true of there are no elements in 'smap'. */
+static inline bool
+smap_is_empty(const struct smap *smap)
+{
+    return hmap_is_empty(&smap->map);
+}
+
+/* Returns the number of elements in 'smap'. */
+static inline size_t
+smap_count(const struct smap *smap)
+{
+    return hmap_count(&smap->map);
+}
 
 void smap_clone(struct smap *dst, const struct smap *src);
 const struct smap_node **smap_sort(const struct smap *);

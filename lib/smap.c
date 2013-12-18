@@ -29,12 +29,6 @@ static int compare_nodes_by_key(const void *, const void *);
 /* Public Functions. */
 
 void
-smap_init(struct smap *smap)
-{
-    hmap_init(&smap->map);
-}
-
-void
 smap_destroy(struct smap *smap)
 {
     if (smap) {
@@ -204,20 +198,6 @@ smap_get_int(const struct smap *smap, const char *key, int def)
     const char *value = smap_get(smap, key);
 
     return value ? atoi(value) : def;
-}
-
-/* Returns true of there are no elements in 'smap'. */
-bool
-smap_is_empty(const struct smap *smap)
-{
-    return hmap_is_empty(&smap->map);
-}
-
-/* Returns the number of elements in 'smap'. */
-size_t
-smap_count(const struct smap *smap)
-{
-    return hmap_count(&smap->map);
 }
 
 /* Initializes 'dst' as a clone of 'src. */

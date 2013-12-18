@@ -42,13 +42,6 @@ hmapx_add__(struct hmapx *map, void *data, size_t hash)
     return node;
 }
 
-/* Initializes 'map' as an empty set of pointers. */
-void
-hmapx_init(struct hmapx *map)
-{
-    hmap_init(&map->map);
-}
-
 /* Destroys 'map'. */
 void
 hmapx_destroy(struct hmapx *map)
@@ -69,36 +62,6 @@ hmapx_clone(struct hmapx *map, const struct hmapx *orig)
     HMAP_FOR_EACH (node, hmap_node, &orig->map) {
         hmapx_add__(map, node->data, node->hmap_node.hash);
     }
-}
-
-/* Exchanges the contents of 'a' and 'b'. */
-void
-hmapx_swap(struct hmapx *a, struct hmapx *b)
-{
-    hmap_swap(&a->map, &b->map);
-}
-
-/* Adjusts 'map' so that it is still valid after it has been moved around in
- * memory (e.g. due to realloc()). */
-void
-hmapx_moved(struct hmapx *map)
-{
-    hmap_moved(&map->map);
-}
-
-/* Returns true if 'map' contains no nodes, false if it contains at least one
- * node. */
-bool
-hmapx_is_empty(const struct hmapx *map)
-{
-    return hmap_is_empty(&map->map);
-}
-
-/* Returns the number of nodes in 'map'. */
-size_t
-hmapx_count(const struct hmapx *map)
-{
-    return hmap_count(&map->map);
 }
 
 /* Adds 'data' to 'map'.  If 'data' is new, returns the new hmapx_node;
@@ -166,13 +129,6 @@ struct hmapx_node *
 hmapx_find(const struct hmapx *map, const void *data)
 {
     return hmapx_find__(map, data, hash_pointer(data, 0));
-}
-
-/* Returns true if 'map' contains 'data', false otherwise. */
-bool
-hmapx_contains(const struct hmapx *map, const void *data)
-{
-    return hmapx_find(map, data) != NULL;
 }
 
 /* Returns true if 'a' and 'b' contain the same pointers, false otherwise. */

@@ -32,15 +32,46 @@ struct hmapx {
 #define HMAPX_INITIALIZER(HMAPX) { HMAP_INITIALIZER(&(HMAPX)->map) }
 
 /* Basics. */
-void hmapx_init(struct hmapx *);
+
+/* Initializes 'map' as an empty set of pointers. */
+static inline void
+hmapx_init(struct hmapx *map)
+{
+    hmap_init(&map->map);
+}
+
 void hmapx_destroy(struct hmapx *);
 void hmapx_clone(struct hmapx *, const struct hmapx *);
-void hmapx_swap(struct hmapx *, struct hmapx *);
-void hmapx_moved(struct hmapx *);
 
-/* Count. */
-bool hmapx_is_empty(const struct hmapx *);
-size_t hmapx_count(const struct hmapx *);
+/* Exchanges the contents of 'a' and 'b'. */
+static inline void
+hmapx_swap(struct hmapx *a, struct hmapx *b)
+{
+    hmap_swap(&a->map, &b->map);
+}
+
+/* Adjusts 'map' so that it is still valid after it has been moved around in
+ * memory (e.g. due to realloc()). */
+static inline void
+hmapx_moved(struct hmapx *map)
+{
+    hmap_moved(&map->map);
+}
+
+/* Returns true if 'map' contains no nodes, false if it contains at least one
+ * node. */
+static inline bool
+hmapx_is_empty(const struct hmapx *map)
+{
+    return hmap_is_empty(&map->map);
+}
+
+/* Returns the number of nodes in 'map'. */
+static inline size_t
+hmapx_count(const struct hmapx *map)
+{
+    return hmap_count(&map->map);
+}
 
 /* Insertion. */
 struct hmapx_node *hmapx_add(struct hmapx *, void *);
@@ -54,8 +85,13 @@ void hmapx_find_and_delete_assert(struct hmapx *, const void *);
 
 /* Search. */
 struct hmapx_node *hmapx_find(const struct hmapx *, const void *);
-bool hmapx_contains(const struct hmapx *, const void *);
-bool hmapx_equals(const struct hmapx *, const struct hmapx *);
+
+/* Returns true if 'map' contains 'data', false otherwise. */
+static inline bool
+hmapx_contains(const struct hmapx *map, const void *data)
+{
+    return hmapx_find(map, data) != NULL;
+}
 
 /* Iteration. */
 

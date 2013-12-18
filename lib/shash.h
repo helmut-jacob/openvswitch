@@ -41,15 +41,42 @@ struct shash {
 #define SHASH_FOR_EACH_SAFE(SHASH_NODE, NEXT, SHASH) \
     HMAP_FOR_EACH_SAFE (SHASH_NODE, NEXT, node, &(SHASH)->map)
 
-void shash_init(struct shash *);
+static inline void
+shash_init(struct shash *sh)
+{
+    hmap_init(&sh->map);
+}
+
 void shash_destroy(struct shash *);
 void shash_destroy_free_data(struct shash *);
-void shash_swap(struct shash *, struct shash *);
-void shash_moved(struct shash *);
+
+static inline void
+shash_swap(struct shash *a, struct shash *b)
+{
+    hmap_swap(&a->map, &b->map);
+}
+
+static inline void
+shash_moved(struct shash *sh)
+{
+    hmap_moved(&sh->map);
+}
+
 void shash_clear(struct shash *);
 void shash_clear_free_data(struct shash *);
-bool shash_is_empty(const struct shash *);
-size_t shash_count(const struct shash *);
+
+static inline bool
+shash_is_empty(const struct shash *shash)
+{
+    return hmap_is_empty(&shash->map);
+}
+
+static inline size_t
+shash_count(const struct shash *shash)
+{
+    return hmap_count(&shash->map);
+}
+
 struct shash_node *shash_add(struct shash *, const char *, const void *);
 struct shash_node *shash_add_nocopy(struct shash *, char *, const void *);
 bool shash_add_once(struct shash *, const char *, const void *);

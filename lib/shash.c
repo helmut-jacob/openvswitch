@@ -29,12 +29,6 @@ hash_name(const char *name)
 }
 
 void
-shash_init(struct shash *sh)
-{
-    hmap_init(&sh->map);
-}
-
-void
 shash_destroy(struct shash *sh)
 {
     if (sh) {
@@ -51,18 +45,6 @@ shash_destroy_free_data(struct shash *sh)
         shash_clear_free_data(sh);
         hmap_destroy(&sh->map);
     }
-}
-
-void
-shash_swap(struct shash *a, struct shash *b)
-{
-    hmap_swap(&a->map, &b->map);
-}
-
-void
-shash_moved(struct shash *sh)
-{
-    hmap_moved(&sh->map);
 }
 
 void
@@ -89,18 +71,6 @@ shash_clear_free_data(struct shash *sh)
         free(node->name);
         free(node);
     }
-}
-
-bool
-shash_is_empty(const struct shash *shash)
-{
-    return hmap_is_empty(&shash->map);
-}
-
-size_t
-shash_count(const struct shash *shash)
-{
-    return hmap_count(&shash->map);
 }
 
 static struct shash_node *

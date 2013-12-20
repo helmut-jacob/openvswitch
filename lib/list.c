@@ -16,21 +16,6 @@
 #include <config.h>
 #include "list.h"
 
-/* Initializes 'list' as an empty list. */
-void
-list_init(struct list *list)
-{
-    list->next = list->prev = list;
-}
-
-/* Initializes 'list' with pointers that will (probably) cause segfaults if
- * dereferenced and, better yet, show up clearly in a debugger. */
-void
-list_poison(struct list *list)
-{
-    memset(list, 0xcc, sizeof *list);
-}
-
 /* Inserts 'elem' just before 'before'. */
 void
 list_insert(struct list *before, struct list *elem)
@@ -60,22 +45,6 @@ list_splice(struct list *before, struct list *first, struct list *last)
     last->next = before;
     before->prev->next = first;
     before->prev = last;
-}
-
-/* Inserts 'elem' at the beginning of 'list', so that it becomes the front in
-   'list'. */
-void
-list_push_front(struct list *list, struct list *elem)
-{
-    list_insert(list->next, elem);
-}
-
-/* Inserts 'elem' at the end of 'list', so that it becomes the back in
- * 'list'. */
-void
-list_push_back(struct list *list, struct list *elem)
-{
-    list_insert(list, elem);
 }
 
 /* Puts 'elem' in the position currently occupied by 'position'.
@@ -181,23 +150,4 @@ list_size(const struct list *list)
     return cnt;
 }
 
-/* Returns true if 'list' is empty, false otherwise. */
-bool
-list_is_empty(const struct list *list)
-{
-    return list->next == list;
-}
 
-/* Returns true if 'list' has exactly 1 element, false otherwise. */
-bool
-list_is_singleton(const struct list *list)
-{
-    return list_is_short(list) && !list_is_empty(list);
-}
-
-/* Returns true if 'list' has 0 or 1 elements, false otherwise. */
-bool
-list_is_short(const struct list *list)
-{
-    return list->next == list->prev;
-}

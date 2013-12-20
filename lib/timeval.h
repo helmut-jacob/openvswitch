@@ -55,9 +55,6 @@ void time_alarm(unsigned int secs);
 int time_poll(struct pollfd *, int n_pollfds, HANDLE *handles,
               long long int timeout_when, int *elapsed);
 
-long long int timespec_to_msec(const struct timespec *);
-long long int timeval_to_msec(const struct timeval *);
-
 struct tm_msec *localtime_msec(long long int now, struct tm_msec *result);
 struct tm_msec *gmtime_msec(long long int now, struct tm_msec *result);
 size_t strftime_msec(char *s, size_t max, const char *format,

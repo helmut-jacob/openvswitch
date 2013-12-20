@@ -79,6 +79,8 @@ static struct rusage *get_recent_rusage(void);
 static void refresh_rusage(void);
 static void timespec_add(struct timespec *sum,
                          const struct timespec *a, const struct timespec *b);
+static long long int timespec_to_msec(const struct timespec *);
+static long long int timeval_to_msec(const struct timeval *);
 
 static void
 init_clock(struct clock *c, clockid_t id)
@@ -299,13 +301,13 @@ time_poll(struct pollfd *pollfds, int n_pollfds, HANDLE *handles OVS_UNUSED,
     return retval;
 }
 
-long long int
+static long long int
 timespec_to_msec(const struct timespec *ts)
 {
     return (long long int) ts->tv_sec * 1000 + ts->tv_nsec / (1000 * 1000);
 }
 
-long long int
+static long long int
 timeval_to_msec(const struct timeval *tv)
 {
     return (long long int) tv->tv_sec * 1000 + tv->tv_usec / 1000;

@@ -149,6 +149,7 @@ enum {
     VALID_VPORT_STAT_ERROR  = 1 << 6,
     VALID_DRVINFO           = 1 << 7,
     VALID_FEATURES          = 1 << 8,
+    VALID_FLAGS             = 1 << 9,
 };
 
 /* Traffic control. */
@@ -632,7 +633,8 @@ netdev_linux_update(struct netdev_linux *dev,
 {
     if (change->nlmsg_type == RTM_NEWLINK) {
         /* Keep drv-info */
-        netdev_linux_changed(dev, change->ifi_flags, VALID_DRVINFO);
+        netdev_linux_changed(dev, change->ifi_flags, VALID_DRVINFO |
+                                                     VALID_FLAGS);
 
         /* Update netdev from rtnl-change msg. */
         if (change->mtu) {
@@ -2639,7 +2641,13 @@ update_flags(struct netdev_linux *netdev, enum netdev_flags off,
     unsigned int old_flags, new_flags;
     int error = 0;
 
-    old_flags = netdev->ifi_flags;
+    if (!(netdev->cache_valid & VALID_FLAGS)) {
+        /* Most likely the device flags are not in sync yet, fetch them now */
+        get_flags(&netdev->up, &old_flags);
+    } else {
+        old_flags = netdev->ifi_flags;
+    }
+
     *old_flagsp = iff_to_nd_flags(old_flags);
     new_flags = (old_flags & ~nd_to_iff_flags(off)) | nd_to_iff_flags(on);
     if (new_flags != old_flags) {
@@ -4585,11 +4593,13 @@ get_flags(const struct netdev *dev, unsigned int *flags)
 {
     struct ifreq ifr;
     int error;
+    struct netdev_linux *netdev = netdev_linux_cast(dev);
 
     *flags = 0;
     error = af_inet_ifreq_ioctl(dev->name, &ifr, SIOCGIFFLAGS, "SIOCGIFFLAGS");
     if (!error) {
         *flags = ifr.ifr_flags;
+        netdev->cache_valid |= VALID_FLAGS;
     }
     return error;
 }

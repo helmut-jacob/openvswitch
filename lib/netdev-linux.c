@@ -2636,7 +2636,7 @@ update_flags(struct netdev_linux *netdev, enum netdev_flags off,
              enum netdev_flags on, enum netdev_flags *old_flagsp)
     OVS_REQUIRES(netdev->mutex)
 {
-    int old_flags, new_flags;
+    unsigned int old_flags, new_flags;
     int error = 0;
 
     old_flags = netdev->ifi_flags;
